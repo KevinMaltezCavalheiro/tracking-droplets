@@ -605,9 +605,6 @@ def main():
 
         images_gray, images_color = open_file_and_load_images(path_video,video_echantillonage, debut_frame, fin_frame)
 
-        if save_plots == 1:
-            saving_image_gray(images_gray)
-
         global compteur
         compteur_lock = threading.Lock()
         compteur = 0
