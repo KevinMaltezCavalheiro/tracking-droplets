@@ -597,61 +597,60 @@ def main():
 
     """début du code"""
     # Enregistrer le temps actuel avant de démarrer le code
-    if load_value == 0:
-        start_time = time.time()
+    start_time = time.time()
 
-        # Appel de la fonction avec le dictionnaire en argument
-        path_video = files[video]["path"]
+    # Appel de la fonction avec le dictionnaire en argument
+    path_video = files[video]["path"]
 
-        images_gray, images_color = open_file_and_load_images(path_video,video_echantillonage, debut_frame, fin_frame)
+    images_gray, images_color = open_file_and_load_images(path_video,video_echantillonage, debut_frame, fin_frame)
 
+    global compteur
+    compteur_lock = threading.Lock()
+    compteur = 0
+
+    def process_image(image_gray):
         global compteur
-        compteur_lock = threading.Lock()
-        compteur = 0
+        rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (int(image_gray.shape[0]/8), int(image_gray.shape[1]/8)))
+        #rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21, 21))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        image_gray = cv2.morphologyEx(image_gray, cv2.MORPH_BLACKHAT, rectKernel)
+        image_gray = cv2.normalize(image_gray, None, 0, 255, cv2.NORM_MINMAX)
+        image_gray = image_gray.astype(np.uint8)
+        image_gray = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY, 51, -10)
+        image_gray = delete_small_spots_function(image_gray, 200)
+        image_gray = cv2.morphologyEx(image_gray, cv2.MORPH_CLOSE, kernel)
 
-        def process_image(image_gray):
-            global compteur
-            rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT, (int(image_gray.shape[0]/8), int(image_gray.shape[1]/8)))
-            #rectKernel = cv2.getStructuringElement(cv2.MORPH_RECT,(21, 21))
-            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-            image_gray = cv2.morphologyEx(image_gray, cv2.MORPH_BLACKHAT, rectKernel)
-            image_gray = cv2.normalize(image_gray, None, 0, 255, cv2.NORM_MINMAX)
-            image_gray = image_gray.astype(np.uint8)
-            image_gray = cv2.adaptiveThreshold(image_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY, 51, -10)
-            image_gray = delete_small_spots_function(image_gray, 200)
-            image_gray = cv2.morphologyEx(image_gray, cv2.MORPH_CLOSE, kernel)
+        # Utiliser un verrou pour incrémenter de manière sûre le compteur
+        with compteur_lock:
+            compteur += 1
+            current_compteur = compteur
+        print(f"Processing image {current_compteur}/{len(images_gray)}")
 
-            # Utiliser un verrou pour incrémenter de manière sûre le compteur
-            with compteur_lock:
-                compteur += 1
-                current_compteur = compteur
-            print(f"Processing image {current_compteur}/{len(images_gray)}")
+        return image_gray
 
-            return image_gray
+    images_gray = Parallel(n_jobs=-1, require='sharedmem')(
+        delayed(process_image)(image_gray) for image_gray in images_gray)
 
-        images_gray = Parallel(n_jobs=-1, require='sharedmem')(
-            delayed(process_image)(image_gray) for image_gray in images_gray)
+    """temps d'exécution du programme"""
+    # Enregistrer le temps actuel après l'exécution du code
+    end_time = time.time()
+    # Calculer la durée
+    duration = end_time - start_time
+    # Afficher la durée
+    print("temps d'exécution du code")
+    print(duration)
 
-        """temps d'exécution du programme"""
-        # Enregistrer le temps actuel après l'exécution du code
-        end_time = time.time()
-        # Calculer la durée
-        duration = end_time - start_time
-        # Afficher la durée
-        print("temps d'exécution du code")
-        print(duration)
+    minimum_size = 200
+    droplet_objects, edge_objects = edge_detection_algorithm(images_gray, images_color, minimum_size)
 
-        minimum_size = 200
-        droplet_objects, edge_objects = edge_detection_algorithm(images_gray, images_color, minimum_size)
+    tracking_data = tracking_algorithm(droplet_objects, images_color, fps, pixel_per_micrometer)
 
-        tracking_data = tracking_algorithm(droplet_objects, images_color, fps, pixel_per_micrometer)
+    for frame in droplet_objects:
+        for droplet_object in frame:
+            if droplet_object.is_droplet == True:
+                print(droplet_object)
 
-        for frame in droplet_objects:
-            for droplet_object in frame:
-                if droplet_object.is_droplet == True:
-                    print(droplet_object)
-
-        print(tracking_data)
+    print(tracking_data)
 
 if __name__ == "__main__":
     main()
