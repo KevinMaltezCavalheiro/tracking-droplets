@@ -6,6 +6,8 @@ from detectron2.utils.visualizer import Visualizer
 from detectron2.data import MetadataCatalog
 import cv2
 
+#ce script utilise le modèle pré entrainé de facebook sur les images de notre choix /!\ les objects détectés sont déjà définis.
+
 # get image
 im = cv2.imread("/Users/Kevin/Downloads/IMG_1918.jpg")
 

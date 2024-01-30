@@ -50,7 +50,7 @@ def get_balloon_dicts(img_dir):
         dataset_dicts.append(record)
     return dataset_dicts
 
-data_dir = "/Users/Kevin/Downloads/balloon"
+data_dir = "/Users/Kevin/PycharmProjects/tracking_droplets/venv/balloon"
 
 for d in ["train", "val"]:
     dataset_path = f"{data_dir}/{d}"
@@ -60,8 +60,8 @@ for d in ["train", "val"]:
 
 balloon_metadata = MetadataCatalog.get("balloon/train")
 
-dataset_dicts = get_balloon_dicts("/Users/Kevin/Downloads/balloon/train")
-for d in random.sample(dataset_dicts, 3):
+dataset_dicts = get_balloon_dicts("/Users/Kevin/PycharmProjects/tracking_droplets/venv/balloon/train")
+for d in random.sample(dataset_dicts, 1):
     img = cv2.imread(d["file_name"])
     visualizer = Visualizer(img[:, :, ::-1], metadata=balloon_metadata, scale=0.5)
     out = visualizer.draw_dataset_dict(d)
@@ -79,7 +79,7 @@ cfg.MODEL.WEIGHTS = "/Users/Kevin/Downloads/model_final_f10217.pkl"  # initializ
 cfg.MODEL.DEVICE = "cpu"
 cfg.SOLVER.IMS_PER_BATCH = 2
 cfg.SOLVER.BASE_LR = 0.00025
-cfg.SOLVER.MAX_ITER = 300   # 300 iterations seems good enough, but you can certainly train longer
+cfg.SOLVER.MAX_ITER = 30   # 300 iterations seems good enough, but you can certainly train longer
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128   # faster, and good enough for this toy dataset
 cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
 cfg.DATALOADER.NUM_WORKERS = 0

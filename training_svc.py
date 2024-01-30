@@ -359,7 +359,6 @@ def edge_detection_algorithm(images, images_color, background_image, minimum_siz
             for droplet_object in frame:
                 if (droplet_object.is_droplet == True) or (droplet_object.is_droplet == False):
                     features.append(droplet_object.is_droplet)
-
         return features
 
     # Vérifiez si les fichiers existent

@@ -50,7 +50,7 @@ def get_balloon_dicts(img_dir):
         dataset_dicts.append(record)
     return dataset_dicts
 
-data_dir = "/Users/Kevin/Downloads/balloon"
+data_dir = "/Users/Kevin/PycharmProjects/tracking_droplets/venv/balloon"
 
 for d in ["train", "val"]:
     dataset_path = f"{data_dir}/{d}"
@@ -65,7 +65,7 @@ cfg = get_cfg()
 cfg.merge_from_file("mycfg.yaml")
 # Load weights
 cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set the testing threshold for this model
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5   # set the testing threshold for this model
 # Set testing data-set path
 cfg.DATASETS.TEST = ("balloon/val", )
 cfg.MODEL.DEVICE = "cpu"
@@ -95,22 +95,22 @@ for d in dataset_dicts:
     cv2.waitKey(0)  # Attendre qu'une touche soit pressée
     cv2.destroyAllWindows()  # Fermer la fenêtre lorsqu'une touche est pressée
 
-# im = cv2.imread('/Users/Kevin/Desktop/8.png')
-# outputs = predictor(im)
-#
-# # Imprimez les prédictions dans le terminal
-# print(outputs["instances"].pred_classes)  # classes prédites
-# print(outputs["instances"].pred_boxes)  # boîtes englobantes prédites
-# print(outputs)
-#
-# v = Visualizer(im[:, :, ::-1],
-#                 metadata=balloon_metadata,
-#                 scale=0.8,
-#                 instance_mode=ColorMode.IMAGE_BW  # supprimer les couleurs des pixels non segmentés
-#                 )
-# v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
-#
-# # Afficher l'image en utilisant cv2.imshow
-# cv2.imshow("Image", v.get_image()[:, :, ::-1])
-# cv2.waitKey(0)  # Attendre qu'une touche soit pressée
-# cv2.destroyAllWindows()  # Fermer la fenêtre lorsqu'une touche est pressée
+im = cv2.imread('/Users/Kevin/Downloads/dcsw1Capillarity.jpg')
+outputs = predictor(im)
+
+# Imprimez les prédictions dans le terminal
+print(outputs["instances"].pred_classes)  # classes prédites
+print(outputs["instances"].pred_boxes)  # boîtes englobantes prédites
+print(outputs)
+
+v = Visualizer(im[:, :, ::-1],
+                metadata=balloon_metadata,
+                scale=0.8,
+                instance_mode=ColorMode.IMAGE_BW  # supprimer les couleurs des pixels non segmentés
+                )
+v = v.draw_instance_predictions(outputs["instances"].to("cpu"))
+
+# Afficher l'image en utilisant cv2.imshow
+cv2.imshow("Image", v.get_image()[:, :, ::-1])
+cv2.waitKey(0)  # Attendre qu'une touche soit pressée
+cv2.destroyAllWindows()  # Fermer la fenêtre lorsqu'une touche est pressée

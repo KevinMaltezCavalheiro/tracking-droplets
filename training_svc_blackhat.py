@@ -237,74 +237,109 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size):
 
         return internal_contour_objects, external_contour_objects
 
-    def predict_droplets(final_objects, final_objects_edges, images_color):
+    def predict_droplets(final_objects):
         # Function to extract features from a DetectedObject, including internal contours
-        def extract_features(droplet_object):
+        def extract_features(droplet_objects):
             features = []
-            features.append([
-                droplet_object.area,  # 0
-                droplet_object.circularity,  # 1
-                droplet_object.centroid_validity,  # 2
-                droplet_object.arearatio,  # 3
-                droplet_object.max_min_radius_ratio,  # 4
-                droplet_object.perimeter,  # 8
-                droplet_object.equivalent_radius,  # 9
-                droplet_object.min_radius,  # 10
-                droplet_object.max_radius,  # 11
-                droplet_object.cost_function_area,  # 12
-                droplet_object.cost_function_perimeter,
-                droplet_object.cost_function_radius,
-                droplet_object.modal_radius,
-                droplet_object.centroid_color[0],
-                droplet_object.centroid_color[1],
-                droplet_object.centroid_color[2]
-            ])
+            for frame in droplet_objects:
+                for droplet_object in frame:
+                    if (droplet_object.is_droplet == True) or (droplet_object.is_droplet == False):
+                        features.append([
+                                droplet_object.area,  # 0
+                                droplet_object.circularity,  # 1
+                                droplet_object.centroid_validity,  # 2
+                                droplet_object.arearatio,  # 3
+                                droplet_object.max_min_radius_ratio,  # 4
+                                droplet_object.perimeter,  # 8
+                                droplet_object.equivalent_radius,  # 9
+                                droplet_object.min_radius,  # 10
+                                droplet_object.max_radius,  # 11
+                                droplet_object.cost_function_area,  # 12
+                                droplet_object.cost_function_perimeter,
+                                droplet_object.cost_function_radius,
+                                droplet_object.modal_radius,
+                                droplet_object.centroid_color[0],
+                                droplet_object.centroid_color[1],
+                                droplet_object.centroid_color[2]
+                                ])
 
             return features
-        loaded_model = load_model('./svm_model.joblib')
-        loaded_scaler = load_model('./scaler.joblib')
 
-        for i, frame in enumerate(final_objects):
+        def extract_is_droplet(droplet_objects):
+            features = []
+            for frame in droplet_objects:
+                for droplet_object in frame:
+                    if (droplet_object.is_droplet == True) or (droplet_object.is_droplet == False):
+                        features.append(droplet_object.is_droplet)
+            return features
 
-            for droplet_object in frame:
-                new_data = extract_features(droplet_object)
-                new_data = loaded_scaler.transform(new_data)
-                prediction = loaded_model.predict(new_data)
-                droplet_object.is_droplet = bool(prediction)
+        # Vérifiez si les fichiers existent
+        if os.path.exists('./svc/X_train_combined.joblib'):
+            X_train = joblib.load('./svc/X_train_combined.joblib')
+        else:
+            X_train = []
 
-                if droplet_object.is_droplet:
-                    if not (np.all(droplet_object.hierarchy == np.array([-1, -1, -1, -1]))):
-                        droplet_object.is_droplet = False
+        if os.path.exists('./svc/y_train_combined.joblib'):
+            y_train = joblib.load('./svc/y_train_combined.joblib')
+        else:
+            y_train = []
 
-        for i, frame in enumerate(final_objects):
-            image_draw = images_color[i].copy()
-            for droplet_object in frame:
-                if droplet_object.is_droplet:
-                        cv2.drawContours(image_draw, [droplet_object.contour], 0, (0, 255, 0), 2)
-                        centroid = tuple(map(int, droplet_object.centroid))
-                        cv2.circle(image_draw, centroid, 5, (0, 255, 0), -1)
-                else:
-                    cv2.drawContours(image_draw, [droplet_object.contour], 0, (0, 0, 255), 2)
-                    centroid = tuple(map(int, droplet_object.centroid))
-                    cv2.circle(image_draw, centroid, 5, (0, 0, 255), -1)
-                # print(droplet_object)
+        if os.path.exists('./svc/X_test_combined.joblib'):
+            X_test = joblib.load('./svc/X_test_combined.joblib')
+        else:
+            X_test = []
 
-            frame = final_objects_edges[i]
-            for edge_object in frame:
-                cv2.drawContours(image_draw, [edge_object.contour], 0, (0, 0, 0), 2)
-                centroid = tuple(map(int, edge_object.centroid))
-                cv2.circle(image_draw, centroid, 5, (0, 0, 0), -1)
+        if os.path.exists('./svc/y_test_combined.joblib'):
+            y_test = joblib.load('./svc/y_test_combined.joblib')
+        else:
+            y_test = []
 
-            cv2.imshow(f"Droplets - Frame {i}", image_draw)
-            cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # Extract features and labels
+        X = extract_features(final_objects)
+        y = extract_is_droplet(final_objects)
 
-        return final_objects, final_objects_edges
+        # Divisez les données en ensembles d'entraînement et de test
+        X_train_new, X_test_new, y_train_new, y_test_new = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # Ajoutez les nouvelles données à l'ensemble d'entraînement existant
+        X_train = X_train + X_train_new
+        y_train = y_train + y_train_new
+        X_test = X_test + X_test_new
+        y_test = y_test + y_test_new
+
+        joblib.dump(X_train, './svc/X_train_combined.joblib')
+        joblib.dump(y_train, './svc/y_train_combined.joblib')
+        joblib.dump(X_test, './svc/X_test_combined.joblib')
+        joblib.dump(y_test, './svc/y_test_combined.joblib')
+
+        entrainement = True
+        if entrainement == True:
+            # Normalisez les caractéristiques
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+            X_test = scaler.transform(X_test)
+
+            # Entraînez le modèle SVM
+            model = SVC(kernel='linear')
+            model.fit(X_train, y_train)
+
+            # Faites des prédictions sur l'ensemble de test
+            y_pred = model.predict(X_test)
+
+            # Évaluez la performance du modèle
+            accuracy = accuracy_score(y_test, y_pred)
+            print(X_test)
+            print(y_test)
+            print(y_pred)
+            print(f'Accuracy: {accuracy}')
+
+            # Enregistrez le modèle
+            save_model(model, './svc/svm_model.joblib')
+            save_model(scaler, './svc/scaler.joblib')
 
     results = Parallel(n_jobs=-1)(delayed(process_frame)(image_gray, minimum_size, images_color[i], i)
                                   for i, image_gray in enumerate(images_gray))
 
-    final_objects_edges = [external_contour_objects for internal_contour_objects, external_contour_objects in results]
     final_objects = [internal_contour_objects for internal_contour_objects, external_contour_objects in results]
 
     def calculate_cost_function(final_objects, minimum_size):
@@ -330,9 +365,92 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size):
 
     calculate_cost_function(final_objects, minimum_size)
 
-    final_objects, final_objects_edges = predict_droplets(final_objects, final_objects_edges, images_color)
+    def display_droplet_contours(image_color, droplet_objects):
+        for droplet_object in droplet_objects:
+            # if droplet_object.cost_function < -1 and droplet_object.circularity < 0.6:
+            if True:
+                image_draw = image_color.copy()
+                cv2.drawContours(image_draw, [droplet_object.contour], 0, (0, 255, 0), 2)
+                centroid = tuple(map(int, droplet_object.centroid))
+                cv2.circle(image_draw, centroid, 5, (0, 255, 0), -1)
 
-    return final_objects, final_objects_edges
+                # Afficher l'image avec les contours et le centroïde
+                cv2.imshow("Droplets", image_draw)
+
+                # Attendre l'entrée du clavier (0 signifie une attente indéfinie)
+                key = cv2.waitKey(0)
+
+                # Vérifier la touche pressée
+                if key == ord('y'):  # Appuyez sur 'y' pour définir is_droplet à True
+                    droplet_object.is_droplet = True
+                elif key == ord('n'):  # Appuyez sur 'n' pour définir is_droplet à False
+                    droplet_object.is_droplet = False
+            else:
+                continue
+
+        # Fermer la fenêtre après la boucle
+        cv2.destroyAllWindows()
+
+    for i, frame in enumerate(final_objects):
+        display_droplet_contours(images_color[i],frame)
+
+    predict_droplets(final_objects)
+
+    def write_training_data_to_json(data, json_file):
+        with open(json_file, 'w') as f:
+            json.dump(data, f)
+
+    training_data = {}
+
+    # Boucle sur les images colorées
+    for i, image_color in enumerate(images_color):
+        image_filename = "image" + str(i) + ".jpg"
+
+        # Placeholder pour les régions de chaque image
+        regions = {}
+
+        # Boucle sur les objets de gouttes (droplets)
+        for j, droplet_object in enumerate(final_objects[i]):
+            if droplet_object.is_droplet == True:
+                region_key = str(j)
+
+                # Utilisez directement les coordonnées du contour
+                x_coords, y_coords = droplet_object.contour[:, :, 0], droplet_object.contour[:, :, 1]
+
+                # Convertissez les coordonnées en listes Python
+                x_coords_list = x_coords.flatten().tolist()
+                y_coords_list = y_coords.flatten().tolist()
+
+                region_data = {
+                    "shape_attributes": {
+                        "name": "polygon",
+                        "all_points_x": x_coords_list,
+                        "all_points_y": y_coords_list
+                    },
+                    "region_attributes": {}
+                }
+
+                # Ajoutez la région au dictionnaire des régions
+                regions[region_key] = region_data
+
+        image_size = image_color.shape[0] * image_color.shape[1]
+
+        # Ajoutez les données d'entraînement pour cette image au dictionnaire global
+        training_data[image_filename] = {
+            "fileref": "",
+            "size": image_size,  # Remplacez ceci par la vraie valeur de la taille
+            "filename": image_filename,
+            "base64_img_data": "",
+            "file_attributes": {},
+            "regions": regions
+        }
+        cv2.imwrite('./balloon/train/'+image_filename, image_color)
+
+    # Spécifiez le chemin de votre fichier JSON de sortie
+    output_json_file = "./balloon/train/via_region_data.json"
+
+    # Écrivez les données d'entraînement dans le fichier JSON
+    write_training_data_to_json(training_data, output_json_file)
 
 def delete_small_spots_function(image_gray, minimum_size):
     # Vérifier si l'image est déjà binaire (0 ou 255)
@@ -426,167 +544,6 @@ def open_file_and_load_images(path_video, video_echantillonage, debut_frame, fin
     images = skimage.color.rgb2gray(images)
     return images, images_color
 
-def tracking_algorithm(final_objects, images_color, Fps, pixel_per_micrometer):
-    #
-    # Supposons que droplet_objects contient les informations des droplets, y compris les centroids.
-    # Vous devez créer un DataFrame pandas à partir de ces informations.
-    data = []
-    for frame_index, frame_objects in enumerate(final_objects):
-        for droplet_object in frame_objects:
-            if droplet_object.is_droplet:
-                data.append({'frame': frame_index, 'x': droplet_object.centroid[0], 'y': droplet_object.centroid[1]})
-
-    df = pd.DataFrame(data)
-
-    traj = tp.link_df(df, search_range=100, memory=1)
-
-    # Affichez les trajectoires résultantes
-    tp.plot_traj(traj)
-
-    # Utilisez cette boucle pour afficher les trajectoires superposées à chaque image
-    # for i in range(len(images_color)):
-    #     plt.figure(figsize=(8, 8))
-    #     tp.plot_traj(traj, label=True, superimpose=images_color[i])
-
-    data_list = []
-
-    v_p_vector = []
-    for item in set(traj.particle):
-        sub = traj[traj.particle == item]
-        dx = np.diff(sub.x) / 1.
-        dy = np.diff(sub.y) / 1.
-        dt = np.diff(sub.frame) / Fps
-        v = (((np.sqrt(dy ** 2 + dx ** 2))) / dt) / pixel_per_micrometer
-        for i in range(len(sub)):
-            if i < len(sub) - 1:
-                x, y, dx_val, dy_val, v_val, dt_val, frame_val = (
-                    sub.x.iloc[i],
-                    sub.y.iloc[i],
-                    abs(dx[i]),
-                    abs(dy[i]),
-                    v[i],
-                    dt[i],
-                    sub.frame.iloc[i],
-                )
-                data_list.append(
-                    {
-                        "dx": dx_val,
-                        "dy": dy_val,
-                        "x": x,
-                        "y": y,
-                        "frame": frame_val,
-                        "particle": item,
-                        "dt": dt_val,
-                        "v": v_val,
-                    }
-                )
-                v_p_vector.append(v_val)
-            else:
-                x, y, dx_val, dy_val, v_val, dt_val, frame_val = (
-                    sub.x.iloc[i],
-                    sub.y.iloc[i],
-                    abs(0),
-                    abs(0),
-                    0,
-                    0,
-                    sub.frame.iloc[i],
-                )
-                data_list.append(
-                    {
-                        "dx": dx_val,
-                        "dy": dy_val,
-                        "x": x,
-                        "y": y,
-                        "frame": frame_val,
-                        "particle": item,
-                        "dt": dt_val,
-                        "v": v_val,
-                    }
-                )
-
-    data = pd.DataFrame(data_list)
-
-    mydict = {}
-
-    for p in np.unique(data.particle):
-        d = {}
-        d['v'] = data.v[data.particle == p]
-        d['frame'] = data.frame[data.particle == p]
-        d['x'] = data.x[data.particle == p]
-        d['y'] = data.y[data.particle == p]
-        d['dx'] = data.dx[data.particle == p]
-        d['dy'] = data.dy[data.particle == p]
-        d['dt'] = data.dt[data.particle == p]
-        mydict[p] = d
-
-    # Initialize a DataFrame to store all the trajectories
-    df_all_traj = pd.DataFrame()
-
-    # Loop through each particle trajectory and add it to the DataFrame
-    for particle_id, data_dict in mydict.items():
-        df_particle_traj = pd.DataFrame(data_dict)
-        df_particle_traj['particle_id'] = particle_id
-        df_all_traj = pd.concat([df_all_traj, df_particle_traj], ignore_index=True)
-
-    # Sort the DataFrame based on frame and particle_id
-    df_all_traj = df_all_traj.sort_values(by=['frame', 'particle_id'])
-
-    # Initialisation des variables
-    state = {'frame_index': 0}
-
-    # Créez une figure
-    fig, ax = plt.subplots(figsize=(8, 8))
-    plt.subplots_adjust(bottom=0.2)  # Ajustez la position du bouton
-
-    def update_image(event):
-        if event.inaxes == axnext and state['frame_index'] < len(images_color) - 1:
-            state['frame_index'] += 1
-        elif event.inaxes == axprev and state['frame_index'] > 0:
-            state['frame_index'] -= 1
-
-        ax.clear()
-        ax.imshow(images_color[state['frame_index']], cmap='gray')
-
-        # Ajoutez votre logique de trajectoire ici
-        for particle_id, df_particle_traj in df_all_traj.groupby('particle_id'):
-            # Vérifiez si la particule est présente sur la frame courante
-            if state['frame_index'] in df_particle_traj['frame'].values:
-                df_frame = df_particle_traj[df_particle_traj['frame'] <= state['frame_index']]
-                if not df_frame.empty:
-                    ax.plot(df_frame['x'], df_frame['y'], label=f'Particle {particle_id}')
-
-        ax.set_title(f'Frame {state["frame_index"]}')
-        ax.legend()
-        plt.draw()
-
-    # Créez le bouton de navigation
-    axprev = plt.axes([0.7, 0.01, 0.1, 0.05])
-    axnext = plt.axes([0.81, 0.01, 0.1, 0.05])
-    bnext = Button(axnext, 'Next')
-    bnext.on_clicked(update_image)
-    bprev = Button(axprev, 'Previous')
-    bprev.on_clicked(update_image)
-
-    # Affichez la première image
-    ax.imshow(images_color[state['frame_index']], cmap='gray')
-    ax.set_title(f'Frame {state["frame_index"]}')
-
-    plt.show()
-
-    # Plot histogram
-    fig, ax = plt.subplots(figsize=(8, 8))
-    v_p_vector = np.array(v_p_vector)
-    v_p_vector = v_p_vector[np.abs(v_p_vector) > 100]
-    hist, bins = np.histogram(v_p_vector, bins='auto')
-    ax.bar(bins[:-1], hist.astype(np.float32) / hist.sum(), width=(bins[1] - bins[0]), color='Blue')
-    plt.legend()
-    plt.ylabel('Frequency')
-    plt.xlabel(r'velocity [$\mu$m/s]')
-    plt.title('Histogram of velocity')
-    plt.show()
-
-    return data
-
 def main():
     """variables principales du programme"""
     #chemins d'accès (voir dictionnaire)
@@ -595,11 +552,7 @@ def main():
     #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
     video_echantillonage = 1
     debut_frame = 0
-    fin_frame = 10
-
-    #scale
-    pixel_per_micrometer = 0.5
-    fps = 60  # set the Number of frame per second at the video was recording.
+    fin_frame = 2
 
     """début du code"""
     # Enregistrer le temps actuel avant de démarrer le code
@@ -647,16 +600,7 @@ def main():
     print(duration)
 
     minimum_size = 200
-    droplet_objects, edge_objects = edge_detection_algorithm(images_gray, images_color, minimum_size)
-
-    tracking_data = tracking_algorithm(droplet_objects, images_color, fps, pixel_per_micrometer)
-
-    for frame in droplet_objects:
-        for droplet_object in frame:
-            if droplet_object.is_droplet == True:
-                print(droplet_object)
-
-    print(tracking_data)
+    edge_detection_algorithm(images_gray, images_color, minimum_size)
 
 if __name__ == "__main__":
     main()
