@@ -588,14 +588,17 @@ def tracking_algorithm(final_objects, images_color, Fps, pixel_per_micrometer):
     return data
 
 def main():
+    #todo: adapter cost function en échelle log -> semble plus pertinent
+    #implémenter le tracking de label des contour de sorte inverser la relation (frame => droplet_objects) mais plutôt (droplet_object => frames)
+    #visualisation des vitesse
     """variables principales du programme"""
     #chemins d'accès (voir dictionnaire)
-    video = "video1"
+    video = "video7"
 
     #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
-    video_echantillonage = 1
+    video_echantillonage = 10
     debut_frame = 0
-    fin_frame = 10
+    fin_frame = np.infty
 
     #scale
     pixel_per_micrometer = 0.5

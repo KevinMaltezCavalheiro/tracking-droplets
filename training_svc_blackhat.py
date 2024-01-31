@@ -113,7 +113,7 @@ def load_model(filename='./svc/svm_model.joblib'):
     print(f"Model loaded from {filename}")
     return model
 
-def edge_detection_algorithm(images_gray, images_color, minimum_size, video):
+def edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame, entrainement):
     def process_frame(image, minimum_size, image_color, frame_index):
         def process_regions_detections(binary_image, ContourObject, image_color, frame_index):
             def calculate_circularity(area, perimeter):
@@ -307,13 +307,12 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size, video):
         X_test = X_test + X_test_new
         y_test = y_test + y_test_new
 
-        joblib.dump(X_train, './svc/X_train_combined.joblib')
-        joblib.dump(y_train, './svc/y_train_combined.joblib')
-        joblib.dump(X_test, './svc/X_test_combined.joblib')
-        joblib.dump(y_test, './svc/y_test_combined.joblib')
-
-        entrainement = True
         if entrainement == True:
+            joblib.dump(X_train, './svc/X_train_combined.joblib')
+            joblib.dump(y_train, './svc/y_train_combined.joblib')
+            joblib.dump(X_test, './svc/X_test_combined.joblib')
+            joblib.dump(y_test, './svc/y_test_combined.joblib')
+
             # Normalisez les caractéristiques
             scaler = StandardScaler()
             X_train = scaler.fit_transform(X_train)
@@ -368,6 +367,7 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size, video):
     def display_droplet_contours(image_color, droplet_objects):
         for droplet_object in droplet_objects:
             # if droplet_object.cost_function < -1 and droplet_object.circularity < 0.6:
+            # if droplet_object.cost_function_area < -1:
             if True:
                 image_draw = image_color.copy()
                 cv2.drawContours(image_draw, [droplet_object.contour], 0, (0, 255, 0), 2)
@@ -396,75 +396,76 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size, video):
 
     predict_droplets(final_objects)
 
-    def load_existing_data(json_file):
-        if os.path.exists(json_file):
-            with open(json_file, 'r') as f:
-                existing_data = json.load(f)
-            return existing_data
-        else:
-            return {}
+    if detectron2training == True:
+        def load_existing_data(json_file):
+            if os.path.exists(json_file):
+                with open(json_file, 'r') as f:
+                    existing_data = json.load(f)
+                return existing_data
+            else:
+                return {}
 
-    def write_training_data_to_json(data, json_file):
-        with open(json_file, 'w') as f:
-            json.dump(data, f)
+        def write_training_data_to_json(data, json_file):
+            with open(json_file, 'w') as f:
+                json.dump(data, f)
 
-    # Chargez les données existantes depuis le fichier JSON
-    existing_data = load_existing_data("./balloon/train/via_region_data.json")
+        # Chargez les données existantes depuis le fichier JSON
+        # Spécifiez le chemin de votre fichier JSON de sortie
+        output_file = "./balloon/train/"
+        output_json_file = output_file+"via_region_data.json"
+        existing_data = load_existing_data(output_json_file)
 
-    training_data = {}
+        training_data = {}
 
-    # Boucle sur les images colorées
-    for i, image_color in enumerate(images_color):
-        image_filename = video + "image" + str(i) + ".jpg"
+        # Boucle sur les images colorées
+        for i, image_color in enumerate(images_color):
+            image_filename = video + "image" + str(debut_frame+i) + ".jpg"
 
-        # Placeholder pour les régions de chaque image
-        regions = {}
+            # Placeholder pour les régions de chaque image
+            regions = {}
 
-        # Boucle sur les objets de gouttes (droplets)
-        for j, droplet_object in enumerate(final_objects[i]):
-            if droplet_object.is_droplet == True:
-                region_key = str(j)
+            # Boucle sur les objets de gouttes (droplets)
+            for j, droplet_object in enumerate(final_objects[i]):
+                if droplet_object.is_droplet == True:
+                    region_key = str(j)
 
-                # Utilisez directement les coordonnées du contour
-                x_coords, y_coords = droplet_object.contour[:, :, 0], droplet_object.contour[:, :, 1]
+                    # Utilisez directement les coordonnées du contour
+                    x_coords, y_coords = droplet_object.contour[:, :, 0], droplet_object.contour[:, :, 1]
 
-                # Convertissez les coordonnées en listes Python
-                x_coords_list = x_coords.flatten().tolist()
-                y_coords_list = y_coords.flatten().tolist()
+                    # Convertissez les coordonnées en listes Python
+                    x_coords_list = x_coords.flatten().tolist()
+                    y_coords_list = y_coords.flatten().tolist()
 
-                region_data = {
-                    "shape_attributes": {
-                        "name": "polygon",
-                        "all_points_x": x_coords_list,
-                        "all_points_y": y_coords_list
-                    },
-                    "region_attributes": {}
-                }
+                    region_data = {
+                        "shape_attributes": {
+                            "name": "polygon",
+                            "all_points_x": x_coords_list,
+                            "all_points_y": y_coords_list
+                        },
+                        "region_attributes": {}
+                    }
 
-                # Ajoutez la région au dictionnaire des régions
-                regions[region_key] = region_data
+                    # Ajoutez la région au dictionnaire des régions
+                    regions[region_key] = region_data
 
-        image_size = image_color.shape[0] * image_color.shape[1]
+            image_size = image_color.shape[0] * image_color.shape[1]
 
-        # Ajoutez les données d'entraînement pour cette image au dictionnaire global
-        training_data[image_filename] = {
-            "fileref": "",
-            "size": image_size,  # Remplacez ceci par la vraie valeur de la taille
-            "filename": image_filename,
-            "base64_img_data": "",
-            "file_attributes": {},
-            "regions": regions
-        }
-        cv2.imwrite('./balloon/train/' + image_filename, image_color)
+            # Ajoutez les données d'entraînement pour cette image au dictionnaire global
+            training_data[image_filename] = {
+                "fileref": "",
+                "size": image_size,  # Remplacez ceci par la vraie valeur de la taille
+                "filename": image_filename,
+                "base64_img_data": "",
+                "file_attributes": {},
+                "regions": regions
+            }
+            cv2.imwrite(output_file + image_filename, image_color)
 
-    # Mettez à jour les données existantes avec les nouvelles données
-    existing_data.update(training_data)
+        # Mettez à jour les données existantes avec les nouvelles données
+        existing_data.update(training_data)
 
-    # Spécifiez le chemin de votre fichier JSON de sortie
-    output_json_file = "./balloon/train/via_region_data.json"
-
-    # Écrivez les données d'entraînement mises à jour dans le fichier JSON
-    write_training_data_to_json(existing_data, output_json_file)
+        # Écrivez les données d'entraînement mises à jour dans le fichier JSON
+        write_training_data_to_json(existing_data, output_json_file)
 
 def delete_small_spots_function(image_gray, minimum_size):
     # Vérifier si l'image est déjà binaire (0 ou 255)
@@ -561,12 +562,15 @@ def open_file_and_load_images(path_video, video_echantillonage, debut_frame, fin
 def main():
     """variables principales du programme"""
     #chemins d'accès (voir dictionnaire)
-    video = "video1"
+    video = "video6"
 
     #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
     video_echantillonage = 1
-    debut_frame = 0
-    fin_frame = 2
+    debut_frame = 11
+    fin_frame = debut_frame+1
+
+    detectron2training = True
+    entrainement = True
 
     """début du code"""
     # Enregistrer le temps actuel avant de démarrer le code
@@ -614,7 +618,7 @@ def main():
     print(duration)
 
     minimum_size = 200
-    edge_detection_algorithm(images_gray, images_color, minimum_size, video)
+    edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame)
 
 if __name__ == "__main__":
     main()
