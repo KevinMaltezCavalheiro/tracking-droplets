@@ -7,15 +7,18 @@ from detectron2.data import MetadataCatalog
 import cv2
 
 #ce script utilise le modèle pré entrainé de facebook sur les images de notre choix /!\ les objects détectés sont déjà définis.
+#prendre une image de son choix pour tester l'algorithme
+
+img_path = "/Users/Kevin/Downloads/IMG_1918.jpg"
 
 # get image
-im = cv2.imread("/Users/Kevin/Downloads/IMG_1918.jpg")
+im = cv2.imread(img_path)
 
 # Create config
 cfg = get_cfg()
-cfg.merge_from_file("/Users/Kevin/Downloads/mask_rcnn_R_101_FPN_3x.yaml")
+cfg.merge_from_file("./detectron2ModelAndWeight/mask_rcnn_R_101_FPN_3x.yaml")
 cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.1  # set threshold for this model
-cfg.MODEL.WEIGHTS = "/Users/Kevin/Downloads/model_final_a3ec72.pkl"
+cfg.MODEL.WEIGHTS = "./detectron2ModelAndWeight/model_final_a3ec72.pkl"
 # Set the device to CPU
 cfg.MODEL.DEVICE = "cpu"
 

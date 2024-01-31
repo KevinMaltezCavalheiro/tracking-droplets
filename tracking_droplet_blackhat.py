@@ -104,11 +104,11 @@ class ContourObject(DetectedObject):
     def __str__(self):
         return super().__str__()
 
-def save_model(model, filename='./svm_model.joblib'):
+def save_model(model, filename='./svc/svm_model.joblib'):
     joblib.dump(model, filename)
     print(f"Model saved as {filename}")
 
-def load_model(filename='./svm_model.joblib'):
+def load_model(filename='./svc/svm_model.joblib'):
     model = joblib.load(filename)
     print(f"Model loaded from {filename}")
     return model
@@ -261,8 +261,8 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size):
             ])
 
             return features
-        loaded_model = load_model('./svm_model.joblib')
-        loaded_scaler = load_model('./scaler.joblib')
+        loaded_model = load_model('./svc/svm_model.joblib')
+        loaded_scaler = load_model('./svc/scaler.joblib')
 
         for i, frame in enumerate(final_objects):
 

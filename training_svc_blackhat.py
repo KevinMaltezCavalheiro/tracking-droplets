@@ -104,11 +104,11 @@ class ContourObject(DetectedObject):
     def __str__(self):
         return super().__str__()
 
-def save_model(model, filename='./svm_model.joblib'):
+def save_model(model, filename='./svc/svm_model.joblib'):
     joblib.dump(model, filename)
     print(f"Model saved as {filename}")
 
-def load_model(filename='./svm_model.joblib'):
+def load_model(filename='./svc/svm_model.joblib'):
     model = joblib.load(filename)
     print(f"Model loaded from {filename}")
     return model

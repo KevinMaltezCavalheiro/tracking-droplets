@@ -50,7 +50,7 @@ def get_balloon_dicts(img_dir):
         dataset_dicts.append(record)
     return dataset_dicts
 
-data_dir = "/Users/Kevin/PycharmProjects/tracking_droplets/venv/balloon"
+data_dir = "./balloon"
 
 for d in ["train", "val"]:
     dataset_path = f"{data_dir}/{d}"
@@ -60,7 +60,7 @@ for d in ["train", "val"]:
 
 balloon_metadata = MetadataCatalog.get("balloon/train")
 
-dataset_dicts = get_balloon_dicts("/Users/Kevin/PycharmProjects/tracking_droplets/venv/balloon/train")
+dataset_dicts = get_balloon_dicts("./balloon/train")
 for d in random.sample(dataset_dicts, 1):
     img = cv2.imread(d["file_name"])
     visualizer = Visualizer(img[:, :, ::-1], metadata=balloon_metadata, scale=0.5)
@@ -75,7 +75,7 @@ cfg.merge_from_file("./detectron2/configs/COCO-InstanceSegmentation/mask_rcnn_R_
 cfg.DATASETS.TRAIN = ("balloon/train",)
 cfg.DATASETS.TEST = ()   # no metrics implemented for this dataset
 cfg.DATALOADER.NUM_WORKERS = 2
-cfg.MODEL.WEIGHTS = "/Users/Kevin/Downloads/model_final_f10217.pkl"  # initialize from model zoo
+cfg.MODEL.WEIGHTS = "./detectron2ModelAndWeight/model_final_f10217.pkl"  # initialize from model zoo
 cfg.MODEL.DEVICE = "cpu"
 cfg.SOLVER.IMS_PER_BATCH = 2
 cfg.SOLVER.BASE_LR = 0.00025
