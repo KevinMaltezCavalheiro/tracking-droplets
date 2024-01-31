@@ -113,7 +113,7 @@ def load_model(filename='./svc/svm_model.joblib'):
     print(f"Model loaded from {filename}")
     return model
 
-def edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame, entrainement):
+def edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame, entrainement, output_file):
     def process_frame(image, minimum_size, image_color, frame_index):
         def process_regions_detections(binary_image, ContourObject, image_color, frame_index):
             def calculate_circularity(area, perimeter):
@@ -410,8 +410,6 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size, video, det
                 json.dump(data, f)
 
         # Chargez les données existantes depuis le fichier JSON
-        # Spécifiez le chemin de votre fichier JSON de sortie
-        output_file = "./balloon/train/"
         output_json_file = output_file+"via_region_data.json"
         existing_data = load_existing_data(output_json_file)
 
@@ -566,10 +564,13 @@ def main():
 
     #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
     video_echantillonage = 1
-    debut_frame = 11
+    debut_frame = 12
     fin_frame = debut_frame+1
 
     detectron2training = True
+    output_file = "./balloon/train/" #or output_file = "./balloon/val/"
+
+    #sauvegarde les données et entraine le modèle svm
     entrainement = True
 
     """début du code"""
@@ -618,7 +619,7 @@ def main():
     print(duration)
 
     minimum_size = 200
-    edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame)
+    edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame, entrainement, output_file)
 
 if __name__ == "__main__":
     main()
