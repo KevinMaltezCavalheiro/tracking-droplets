@@ -113,7 +113,7 @@ def load_model(filename='./svm_model.joblib'):
     print(f"Model loaded from {filename}")
     return model
 
-def edge_detection_algorithm(images_gray, images_color, minimum_size):
+def edge_detection_algorithm(images_gray, images_color, minimum_size, video):
     def process_frame(image, minimum_size, image_color, frame_index):
         def process_regions_detections(binary_image, ContourObject, image_color, frame_index):
             def calculate_circularity(area, perimeter):
@@ -396,15 +396,26 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size):
 
     predict_droplets(final_objects)
 
+    def load_existing_data(json_file):
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as f:
+                existing_data = json.load(f)
+            return existing_data
+        else:
+            return {}
+
     def write_training_data_to_json(data, json_file):
         with open(json_file, 'w') as f:
             json.dump(data, f)
+
+    # Chargez les données existantes depuis le fichier JSON
+    existing_data = load_existing_data("./balloon/train/via_region_data.json")
 
     training_data = {}
 
     # Boucle sur les images colorées
     for i, image_color in enumerate(images_color):
-        image_filename = "image" + str(i) + ".jpg"
+        image_filename = video + "image" + str(i) + ".jpg"
 
         # Placeholder pour les régions de chaque image
         regions = {}
@@ -444,13 +455,16 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size):
             "file_attributes": {},
             "regions": regions
         }
-        cv2.imwrite('./balloon/train/'+image_filename, image_color)
+        cv2.imwrite('./balloon/train/' + image_filename, image_color)
+
+    # Mettez à jour les données existantes avec les nouvelles données
+    existing_data.update(training_data)
 
     # Spécifiez le chemin de votre fichier JSON de sortie
     output_json_file = "./balloon/train/via_region_data.json"
 
-    # Écrivez les données d'entraînement dans le fichier JSON
-    write_training_data_to_json(training_data, output_json_file)
+    # Écrivez les données d'entraînement mises à jour dans le fichier JSON
+    write_training_data_to_json(existing_data, output_json_file)
 
 def delete_small_spots_function(image_gray, minimum_size):
     # Vérifier si l'image est déjà binaire (0 ou 255)
@@ -600,7 +614,7 @@ def main():
     print(duration)
 
     minimum_size = 200
-    edge_detection_algorithm(images_gray, images_color, minimum_size)
+    edge_detection_algorithm(images_gray, images_color, minimum_size, video)
 
 if __name__ == "__main__":
     main()
