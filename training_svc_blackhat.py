@@ -366,6 +366,7 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size, video, det
 
     def display_droplet_contours(image_color, droplet_objects):
         for droplet_object in droplet_objects:
+            # abc
             # if droplet_object.cost_function < -1 and droplet_object.circularity < 0.6:
             # if droplet_object.cost_function_area < -1:
             if True:
@@ -563,15 +564,23 @@ def main():
     video = "video6"
 
     #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
+    #dans le cadre de l'entrainement, faire attention de ne pas avoir le même numéro de vidéo ET d'image
+    #donc si ma video comporte 100 images et que je choisi un échantillonage à 1, on a 100 images numéroté 0,1,2,3,...
+    #si je choisi un échantillonage à 10, on a 10 images numérotées 0,1,2,3,... mais correspondent en réalité à l'image 0,10,20,30,... de la video
     video_echantillonage = 1
     debut_frame = 12
-    fin_frame = debut_frame+1
-
-    detectron2training = True
-    output_file = "./balloon/train/" #or output_file = "./balloon/val/"
+    fin_frame = debut_frame+1 #exemple type: np.infty == toute la video, debut_frame+1 == image spécifique, nombre de votre choix
 
     #sauvegarde les données et entraine le modèle svm
+    #rechercher "abc" dans le code, à cet endroit se trouve un if == TRUE, celui-ci peut être remplacé par les autres donnés en exemple
+    #l'idée est de spécifier certaines données d'entrainement pour augmenter leurs poids, exemple ne considérer que les gouttes plus grosses que la moyenne
     entrainement = True
+
+    #soit on enregistre les objects détectés pour l'entrainement de l'algorithme
+    #soit on les enregistre pour sa phase de test et ainsi évaluer ses performances
+    detectron2training = True
+    output_file = "./balloon/train/"
+    #output_file = "./balloon/val/"
 
     """début du code"""
     # Enregistrer le temps actuel avant de démarrer le code

@@ -65,7 +65,7 @@ cfg = get_cfg()
 cfg.merge_from_file("mycfg.yaml")
 # Load weights
 cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.3   # set the testing threshold for this model
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.01   # set the testing threshold for this model
 # Set testing data-set path
 cfg.DATASETS.TEST = ("balloon/val", )
 cfg.MODEL.DEVICE = "cpu"
@@ -96,7 +96,7 @@ for d in dataset_dicts:
     cv2.destroyAllWindows()  # Fermer la fenêtre lorsqu'une touche est pressée
 
 #image de votre choix pour tester l'algorithme
-im = cv2.imread('/Users/Kevin/Downloads/dcsw1Capillarity.jpg')
+im = cv2.imread('/Users/Kevin/Downloads/dcdw1.jpg')
 outputs = predictor(im)
 
 # Imprimez les prédictions dans le terminal
