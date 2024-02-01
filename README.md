@@ -29,3 +29,12 @@ To use the code, follow these steps:
 For more information about how the code works and how to adapt it to your needs, see `algorithm1`. For the use of detectron2, see `algorithm2`.
 
 As this is a first version, feel free to provide feedback regarding optimization or potential bugs. I will do my best to correct them over time.
+
+Here is an example of droplets detections based on the first algorithm
+
+![Algorithm1](algo1.png)
+
+And here another example is provided by using detectron2 (note that I forgot to change 'balloon' to 'droplet' following a tutorial on using detectron2 <https://gilberttanner.com/blog/detectron-2-object-detection-with-pytorch/>) 
+
+![Algorithm2](algo2.png)
+

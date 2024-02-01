@@ -65,7 +65,7 @@ cfg = get_cfg()
 cfg.merge_from_file("mycfg.yaml")
 # Load weights
 cfg.MODEL.WEIGHTS = os.path.join(cfg.OUTPUT_DIR, "model_final.pth")
-cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.01   # set the testing threshold for this model
+cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.02   # set the testing threshold for this model
 # Set testing data-set path
 cfg.DATASETS.TEST = ("balloon/val", )
 cfg.MODEL.DEVICE = "cpu"
