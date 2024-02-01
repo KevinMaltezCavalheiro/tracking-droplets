@@ -4,8 +4,7 @@ Pour l'utilisation de mon algorithme. Voici les principales étapes d'installati
 
 1) Créer un environement pycharm et vérifier que le dossier de l'environnement virtuel (venv) a bien été créé
 
-2) Copier le projet à partir de gitlab(https://gitlab.uliege.be/K.Maltez/tracking_droplets)
-2.1) utiliser clone ssh ou clone https pour copier le projet sur votre pc. Sur batch (terminal sur mac), taper sans les guillemets:
+2) Copier le projet à partir de gitlab(https://gitlab.uliege.be/K.Maltez/tracking_droplets). Utiliser clone ssh ou clone https pour copier le projet sur votre pc. Sur batch (terminal sur mac), taper sans les guillemets:
 
 'cd /chemin vers votre projet python et le répertoire venv/'
 
@@ -16,7 +15,7 @@ ensuite copier le projet avec la commande suivante toujours dans le terminal (si
 
 'git clone git@gitlab.uliege.be:K.Maltez/tracking_droplets.git'
 
-3)Vous pouvez maintenant ouvrir le projet dans pycharm. Les fichier relatifs à ce modèle sont "training_svc_blackhat.py", "tracking_droplet_blackhat.py" et le dossier "svc"
+3) Vous pouvez maintenant ouvrir le projet dans pycharm. Les fichier relatifs à ce modèle sont "training_svc_blackhat.py", "tracking_droplet_blackhat.py" et le dossier "svc"
 
 4) procéder à l'installation des différentes librairies nécessaires. Pour ce faire, taper la commande bash /!\ dans le terminal de pycharm /!\ (il faut installer les librairies dans l'environnement virtuel):
 
