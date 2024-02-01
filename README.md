@@ -26,6 +26,6 @@ To use the code, follow these steps:
 3. Still at the beginning of `main`, adjust the main parameters such as pixel size and frames per second (fps) according to your video. Also choose which images to load through the `video_sampling`, `start_frame`, and `end_frame` variables. Note that changing the sampling rate will also affect the fps.
 4. Run the code! The detected drops should appear in green.
 
-For more information about how the code works and how to adapt it to your needs, see `algorithm1`.
+For more information about how the code works and how to adapt it to your needs, see `algorithm1`. For the use of detectron2, see `algorithm2`.
 
 As this is a first version, feel free to provide feedback regarding optimization or potential bugs. I will do my best to correct them over time.
