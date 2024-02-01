@@ -113,7 +113,7 @@ def load_model(filename='./svc/svm_model.joblib'):
     print(f"Model loaded from {filename}")
     return model
 
-def edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame, entrainement, output_file):
+def edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, start_frame, entrainement, output_file):
     def process_frame(image, minimum_size, image_color, frame_index):
         def process_regions_detections(binary_image, ContourObject, image_color, frame_index):
             def calculate_circularity(area, perimeter):
@@ -418,7 +418,7 @@ def edge_detection_algorithm(images_gray, images_color, minimum_size, video, det
 
         # Boucle sur les images colorées
         for i, image_color in enumerate(images_color):
-            image_filename = video + "image" + str(debut_frame+i) + ".jpg"
+            image_filename = video + "image" + str(start_frame+i) + ".jpg"
 
             # Placeholder pour les régions de chaque image
             regions = {}
@@ -518,7 +518,7 @@ def plot_with_zoom(image):
     plt.imshow(image, cmap="gray")
     plt.show()
 
-def open_file_and_load_images(path_video, video_echantillonage, debut_frame, fin_frame):
+def open_file_and_load_images(path_video, video_sampling, start_frame, end_frame):
     # Ouvrir le fichier vidéo
     video_capture = cv2.VideoCapture(path_video)
 
@@ -535,11 +535,11 @@ def open_file_and_load_images(path_video, video_echantillonage, debut_frame, fin
     while video_capture.isOpened():
         counter += 1
         # Si le compteur est supérieur à la dernière image souhaitée, sortir de la boucle
-        if counter > fin_frame:
+        if counter > end_frame:
             break
 
         # Si le compteur est inférieur au premier frame souhaité, passer à l'itération suivante
-        if (counter <= debut_frame) or (counter % video_echantillonage != 0):
+        if (counter <= start_frame) or (counter % video_sampling != 0):
             video_capture.grab()  # on lit le frame sans le stocker dans "frame"
             continue
 
@@ -563,13 +563,13 @@ def main():
     #chemins d'accès (voir dictionnaire)
     video = "video6"
 
-    #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
+    #nombre d'image prise en compte dans la vidéo, si video_sampling == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
     #dans le cadre de l'entrainement, faire attention de ne pas avoir le même numéro de vidéo ET d'image
     #donc si ma video comporte 100 images et que je choisi un échantillonage à 1, on a 100 images numéroté 0,1,2,3,...
     #si je choisi un échantillonage à 10, on a 10 images numérotées 0,1,2,3,... mais correspondent en réalité à l'image 0,10,20,30,... de la video
-    video_echantillonage = 1
-    debut_frame = 12
-    fin_frame = debut_frame+1 #exemple type: np.infty == toute la video, debut_frame+1 == image spécifique, nombre de votre choix
+    video_sampling = 1
+    start_frame = 12
+    end_frame = start_frame+1 #exemple type: np.infty == toute la video, start_frame+1 == image spécifique, nombre de votre choix
 
     #sauvegarde les données et entraine le modèle svm
     #rechercher "abc" dans le code, à cet endroit se trouve un if == TRUE, celui-ci peut être remplacé par les autres donnés en exemple
@@ -589,7 +589,7 @@ def main():
     # Appel de la fonction avec le dictionnaire en argument
     path_video = files[video]["path"]
 
-    images_gray, images_color = open_file_and_load_images(path_video,video_echantillonage, debut_frame, fin_frame)
+    images_gray, images_color = open_file_and_load_images(path_video,video_sampling, start_frame, end_frame)
 
     global compteur
     compteur_lock = threading.Lock()
@@ -628,7 +628,7 @@ def main():
     print(duration)
 
     minimum_size = 200
-    edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, debut_frame, entrainement, output_file)
+    edge_detection_algorithm(images_gray, images_color, minimum_size, video, detectron2training, start_frame, entrainement, output_file)
 
 if __name__ == "__main__":
     main()

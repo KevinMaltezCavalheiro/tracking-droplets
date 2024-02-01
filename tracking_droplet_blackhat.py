@@ -386,7 +386,7 @@ def plot_with_zoom(image):
     plt.imshow(image, cmap="gray")
     plt.show()
 
-def open_file_and_load_images(path_video, video_echantillonage, debut_frame, fin_frame):
+def open_file_and_load_images(path_video, video_sampling, start_frame, end_frame):
     # Ouvrir le fichier vidéo
     video_capture = cv2.VideoCapture(path_video)
 
@@ -403,11 +403,11 @@ def open_file_and_load_images(path_video, video_echantillonage, debut_frame, fin
     while video_capture.isOpened():
         counter += 1
         # Si le compteur est supérieur à la dernière image souhaitée, sortir de la boucle
-        if counter > fin_frame:
+        if counter > end_frame:
             break
 
         # Si le compteur est inférieur au premier frame souhaité, passer à l'itération suivante
-        if (counter <= debut_frame) or (counter % video_echantillonage != 0):
+        if (counter <= start_frame) or (counter % video_sampling != 0):
             video_capture.grab()  # on lit le frame sans le stocker dans "frame"
             continue
 
@@ -595,10 +595,10 @@ def main():
     #chemins d'accès (voir dictionnaire)
     video = "video7"
 
-    #nombre d'image prise en compte dans la vidéo, si video_echantillonage == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
-    video_echantillonage = 10
-    debut_frame = 0
-    fin_frame = np.infty
+    #nombre d'image prise en compte dans la vidéo, si video_sampling == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
+    video_sampling = 10
+    start_frame = 0
+    end_frame = np.infty
 
     #scale
     pixel_per_micrometer = 0.5
@@ -611,7 +611,7 @@ def main():
     # Appel de la fonction avec le dictionnaire en argument
     path_video = files[video]["path"]
 
-    images_gray, images_color = open_file_and_load_images(path_video,video_echantillonage, debut_frame, fin_frame)
+    images_gray, images_color = open_file_and_load_images(path_video,video_sampling, start_frame, end_frame)
 
     global compteur
     compteur_lock = threading.Lock()
