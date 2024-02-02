@@ -34,6 +34,14 @@ Here is an example of droplets detections based on the first algorithm
 
 ![Algorithm1](algo1.png)
 
+With pytrack, it is also possible to track droplets frame by frame while watching the video :
+
+![trajectory](trajectory.png)
+
+Moreover, you can plot the histogram of different velocities measured:
+
+![histogram](histogram.png)
+
 And here another example is provided by using detectron2 (note that I forgot to change 'balloon' to 'droplet' following a tutorial on using detectron2 <https://gilberttanner.com/blog/detectron-2-object-detection-with-pytorch/>) 
 
 ![Algorithm2](algo2.png)

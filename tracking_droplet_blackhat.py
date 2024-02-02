@@ -547,9 +547,12 @@ def tracking_algorithm(final_objects, images_color, Fps, pixel_per_micrometer):
         ax.clear()
         ax.imshow(images_color[state['frame_index']], cmap='gray')
 
-        # Ajoutez votre logique de trajectoire ici
+        # Dessinez les centroïdes pour la frame actuelle
+        centroids = df_all_traj[df_all_traj['frame'] == state['frame_index']][['x', 'y']].values
+        ax.scatter(centroids[:, 0], centroids[:, 1], marker='.', color='red', zorder=10)
+
+        # Trajectoires et légende
         for particle_id, df_particle_traj in df_all_traj.groupby('particle_id'):
-            # Vérifiez si la particule est présente sur la frame courante
             if state['frame_index'] in df_particle_traj['frame'].values:
                 df_frame = df_particle_traj[df_particle_traj['frame'] <= state['frame_index']]
                 if not df_frame.empty:
@@ -596,7 +599,7 @@ def main():
     video = "video7"
 
     #nombre d'image prise en compte dans la vidéo, si video_sampling == 100, une image sur 100 est traitée dans le code (les vidéos sont trop grosses)
-    video_sampling = 10
+    video_sampling = 1
     start_frame = 0
     end_frame = np.infty
 
