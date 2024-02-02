@@ -3,7 +3,7 @@
 
 This project consists of two separate codes. The first one is an algorithm I developed based on conventional image analysis. The second one uses the Detectron2 deep learning algorithm from Meta group <https://ai.meta.com/tools/detectron2/>.
 
-### Using my algorithm
+### Using the first algorithm
 
 Here are the main steps for installation and usage.
 
